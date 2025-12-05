@@ -8,8 +8,22 @@ export interface IPost {
     text?: string; // optional; can be empty for pure image post
     imageUrl?: string; // ImageKit URL
     imageFileId?: string; // ImageKit fileId (for delete, transforms)
+
     createdAt?: Date;
     updatedAt?: Date;
+    reports?: number;
+    reportedBy?: string[];
+    likes?: string[];
+    reposts?: string[];
+    views?: number;
+    comments?: {
+        id: string;
+        text: string;
+        authorEmail: string;
+        authorName: string;
+        authorAvatar: string;
+        createdAt: Date;
+    }[];
 }
 
 const postSchema = new Schema<IPost>(
@@ -22,6 +36,8 @@ const postSchema = new Schema<IPost>(
         likes: { type: [String], default: [] }, // Array of user emails or IDs
         reposts: { type: [String], default: [] }, // Array of user emails or IDs
         views: { type: Number, default: 0 },
+        reports: { type: Number, default: 0 },
+        reportedBy: { type: [String], default: [] },
         comments: {
             type: [{
                 id: String,

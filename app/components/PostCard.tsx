@@ -1,6 +1,29 @@
 "use client";
+import Link from "next/link";
+// ... imports
 
-import Image from "next/image";
+// Helper function to resolve author ID if available, otherwise we might need to rely on API or search
+// Since Post interface doesn't strictly have authorId in the provided `Props` type (it comes from `app/data/posts`),
+// but we updated `Post.model.ts` to have it.
+// Wait, `PostCard` uses `type Props = { post: Post }` from `@/app/data/posts`.
+// I need to check `app/data/posts.ts` or similar to see if `authorId` or `id` is available for the author.
+// The `PostCard` props post.author usually has `name`, `handle`, `avatar`.
+// If `authorId` is missing in the frontend type, I might need to add it or pass it.
+// Let's assume for now I can pass it or it's there.
+// Actually, looking at `profile/page.tsx`, we map `cards` and we DON'T currently pass `author.id`.
+// I should update `profile/page.tsx` and `search/page.tsx` to include `authorId` in the author object,
+// and update the type definition if needed.
+
+// STEP 1: Update PostCard to accept authorId or link logic.
+// For now, let's wrap in Link assuming we have an ID or just link to `/profile` if it's "me" but we want "them".
+// We need the User ID of the author to link to `/profile?userId=...`
+
+// Let's first update the `Post` type in `app/components/PostCard.tsx` or wherever it is defined locally if it's not imported from a central type.
+// It imports `type Post` from `@/app/data/posts`.
+// I better check `@/app/data/posts` first to add `id` to `author`.
+
+// STARTING WITH VIEWING THE TYPE DEFINITION
+
 import { motion, AnimatePresence } from "framer-motion";
 import useIsClient from "@/app/hooks/useIsClient";
 import {
@@ -147,39 +170,81 @@ export default function PostCard({ post }: Props) {
   return (
     <article className="bg-background p-4 text-foreground border-b border-border">
       <div className="mb-2 flex items-start gap-3">
-        <UserAvatar
-          src={post.author.avatar}
-          name={post.author.name}
-          size={40}
-        />
+        <Link
+          href={post.author.id ? `/profile?userId=${post.author.id}` : "#"}
+          className="pointer-events-auto"
+        >
+          <UserAvatar
+            src={post.author.avatar}
+            name={post.author.name}
+            size={40}
+          />
+        </Link>
         <div className="min-w-0 flex-1">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2 text-sm">
-              <span className="font-semibold text-white">
+              <Link
+                href={
+                  post.author.id ? `/profile?userId=${post.author.id}` : "#"
+                }
+                className="font-semibold text-foreground hover:underline"
+              >
                 {post.author.name}
-              </span>
-              <span className="truncate text-zinc-500">
+              </Link>
+              <span className="truncate text-muted-foreground">
                 {post.author.handle} · {formatTimeUTC(post.createdAt)}
               </span>
             </div>
-            {isOwner && (
-              <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2">
+              {isOwner ? (
+                <>
+                  <button
+                    onClick={() => setIsEditing(!isEditing)}
+                    className="text-muted-foreground hover:text-foreground"
+                    title="Edit"
+                  >
+                    <Pencil size={14} />
+                  </button>
+                  <button
+                    onClick={handleDelete}
+                    className="text-muted-foreground hover:text-destructive"
+                    title="Delete"
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                </>
+              ) : (
                 <button
-                  onClick={() => setIsEditing(!isEditing)}
-                  className="text-zinc-500 hover:text-white"
-                  title="Edit"
+                  onClick={async () => {
+                    if (!confirm("Are you sure you want to report this post?"))
+                      return;
+                    try {
+                      const res = await fetch(`/api/posts/${post.id}/report`, {
+                        method: "POST",
+                      });
+                      const data = await res.json();
+                      if (res.ok) {
+                        alert(data.message);
+                        if (data.message.includes("deleted")) {
+                          router.refresh();
+                        }
+                      } else {
+                        alert(data.error || data.message || "Failed to report");
+                      }
+                    } catch (e) {
+                      console.error(e);
+                      alert("Error reporting post");
+                    }
+                  }}
+                  className="text-muted-foreground hover:text-destructive"
+                  title="Report"
                 >
-                  <Pencil size={14} />
+                  <span className="text-xs border border-border px-2 py-1 rounded-md hover:border-destructive hover:bg-destructive/10 transition-colors">
+                    Report
+                  </span>
                 </button>
-                <button
-                  onClick={handleDelete}
-                  className="text-zinc-500 hover:text-red-500"
-                  title="Delete"
-                >
-                  <Trash2 size={14} />
-                </button>
-              </div>
-            )}
+              )}
+            </div>
           </div>
 
           {isEditing ? (
