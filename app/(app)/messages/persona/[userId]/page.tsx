@@ -92,7 +92,7 @@ export default function PersonaChatPage() {
     chatHistory.push({ role: "user", content: userMsg.text });
 
     try {
-      const res = await fetch("/api/message", {
+      const res = await fetch("/api/persona-chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ messages: chatHistory }),
