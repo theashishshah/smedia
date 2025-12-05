@@ -9,10 +9,15 @@ import Topbar from "@/app/components/Topbar";
 import { useRouter } from "next/navigation";
 import { useTimerStore } from "@/libs/store";
 
+import { useTheme } from "next-themes";
+import UserAvatar from "@/app/components/UserAvatar";
+
 export default function MorePage() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const [loggingOut, setLoggingOut] = useState(false);
+  const { theme, setTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
 
   const {
     minutes,
@@ -35,6 +40,7 @@ export default function MorePage() {
 
   // Tick every second for UI display
   useEffect(() => {
+    setMounted(true);
     const id = window.setInterval(() => setNow(Date.now()), 1000);
     return () => window.clearInterval(id);
   }, []);
@@ -73,16 +79,11 @@ export default function MorePage() {
         {/* Profile card */}
         <div className="rounded-2xl border border-zinc-800 bg-zinc-950/40 p-6">
           <div className="flex items-center gap-4">
-            <div className="relative h-12 w-12 overflow-hidden rounded-full ring-1 ring-zinc-800">
-              <Image
-                src={
-                  (session?.user?.image as string) || "/avatar-placeholder.png"
-                }
-                alt="User avatar"
-                fill
-                sizes="48px"
-              />
-            </div>
+            <UserAvatar
+              src={session?.user?.image}
+              name={session?.user?.name}
+              size={48}
+            />
             <div>
               <p className="text-white font-semibold">
                 {session?.user?.name || "Signed in user"}
@@ -92,6 +93,27 @@ export default function MorePage() {
               </p>
             </div>
           </div>
+        </div>
+
+        {/* ---- Theme Toggle ---- */}
+        <div className="rounded-2xl border border-zinc-800 bg-zinc-950/40 p-6 flex items-center justify-between">
+          <div>
+            <p className="text-white font-semibold">Appearance</p>
+            <p className="text-sm text-zinc-400">
+              Choose your preferred theme.
+            </p>
+          </div>
+          {mounted && (
+            <select
+              value={theme}
+              onChange={(e) => setTheme(e.target.value)}
+              className="rounded-md border border-zinc-700 bg-black px-3 py-2 text-white"
+            >
+              <option value="system">System</option>
+              <option value="dark">Dark</option>
+              <option value="light">Light</option>
+            </select>
+          )}
         </div>
 
         {/* ---- Timer card ---- */}

@@ -2,7 +2,6 @@
 
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
-import { useLocalStorage } from "../hooks/localStorage";
 import useIsClient from "@/app/hooks/useIsClient";
 import {
   MessageSquare,
@@ -13,21 +12,13 @@ import {
   Trash2,
 } from "lucide-react";
 import type { Post } from "@/app/data/posts";
-import { useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import CommentBox from "./CommentBox";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import UserAvatar from "./UserAvatar";
 
 type Props = { post: Post };
-
-type Comment = { id: string; text: string; createdAt: string };
-type Stored = {
-  likes: number;
-  liked: boolean;
-  reposts: number;
-  reposted: boolean;
-  comments: Comment[]; // always an array in our initial value
-};
 
 const heartVariants = {
   initial: { scale: 1 },
@@ -38,7 +29,6 @@ const repeatVariants = {
   boosted: { rotate: [0, 20, 0], transition: { duration: 0.25 } },
 };
 
-// Server-stable time string (UTC, avoids locale/timezone mismatch)
 function formatTimeUTC(iso: string) {
   const d = new Date(iso);
   const hh = String(d.getUTCHours()).padStart(2, "0");
@@ -50,55 +40,74 @@ export default function PostCard({ post }: Props) {
   const isClient = useIsClient();
   const { data: session } = useSession();
   const router = useRouter();
-  const storageKey = `smedia.post.${post.id}`;
-  const [openComments, setOpenComments] = useState(false);
 
   const isOwner = session?.user?.email === post.author.email;
   const [isEditing, setIsEditing] = useState(false);
   const [editedText, setEditedText] = useState(post.content);
   const [isSaving, setIsSaving] = useState(false);
+  const [openComments, setOpenComments] = useState(false);
 
-  const [stored, setStored] = useLocalStorage<Stored>(storageKey, {
-    likes: post.stats.likes,
-    liked: false,
-    reposts: post.stats.reposts,
-    reposted: false,
-    comments: [],
-  });
+  // Interaction State
+  const [likes, setLikes] = useState(post.stats.likes);
+  const [liked, setLiked] = useState(post.likedByMe ?? false);
+  const [reposts, setReposts] = useState(post.stats.reposts);
+  const [reposted, setReposted] = useState(post.repostedByMe ?? false);
+  const [comments, setComments] = useState(post.comments ?? []);
 
-  // Use server values on SSR to avoid hydration mismatch; swap to client values after mount
-  const likesToShow = isClient ? Math.max(0, stored.likes) : post.stats.likes;
-  const repostsToShow = isClient
-    ? Math.max(0, stored.reposts)
-    : post.stats.reposts;
-  const commentsArr = isClient ? stored.comments ?? [] : []; // only add local comments on client
-  const repliesBase = post.stats.replies ?? 0;
-  const replyCount = repliesBase + commentsArr.length;
+  // Increment view on mount
+  useEffect(() => {
+    // Fire and forget view increment
+    fetch(`/api/posts/${post.id}/view`, { method: "POST" }).catch(
+      console.error
+    );
+  }, [post.id]);
 
-  const onToggleLike = () =>
-    setStored((s) => {
-      const liked = !s.liked;
-      return { ...s, liked, likes: Math.max(0, s.likes + (liked ? 1 : -1)) };
-    });
+  const onToggleLike = async () => {
+    const newLiked = !liked;
+    setLiked(newLiked);
+    setLikes((prev) => Math.max(0, prev + (newLiked ? 1 : -1)));
 
-  const onToggleRepost = () =>
-    setStored((s) => {
-      const reposted = !s.reposted;
-      return {
-        ...s,
-        reposted,
-        reposts: Math.max(0, s.reposts + (reposted ? 1 : -1)),
-      };
-    });
+    try {
+      await fetch(`/api/posts/${post.id}/like`, { method: "POST" });
+      router.refresh();
+    } catch (e) {
+      console.error(e);
+      setLiked(!newLiked);
+      setLikes((prev) => Math.max(0, prev + (!newLiked ? 1 : -1)));
+    }
+  };
 
-  const onAddComment = (text: string) =>
-    setStored((s) => ({
-      ...s,
-      comments: [
-        { id: crypto.randomUUID(), text, createdAt: new Date().toISOString() },
-        ...(s.comments ?? []),
-      ],
-    }));
+  const onToggleRepost = async () => {
+    const newReposted = !reposted;
+    setReposted(newReposted);
+    setReposts((prev) => Math.max(0, prev + (newReposted ? 1 : -1)));
+
+    try {
+      await fetch(`/api/posts/${post.id}/repost`, { method: "POST" });
+      router.refresh();
+    } catch (e) {
+      console.error(e);
+      setReposted(!newReposted);
+      setReposts((prev) => Math.max(0, prev + (!newReposted ? 1 : -1)));
+    }
+  };
+
+  const onAddComment = async (text: string) => {
+    try {
+      const res = await fetch(`/api/posts/${post.id}/comment`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setComments((prev) => [data.comment, ...prev]);
+        router.refresh();
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
 
   const handleSaveEdit = async () => {
     setIsSaving(true);
@@ -133,15 +142,15 @@ export default function PostCard({ post }: Props) {
     }
   };
 
+  const replyCount = (post.stats.replies || 0) + comments.length;
+
   return (
-    <article className="bg-black p-4 text-zinc-200">
+    <article className="bg-black p-4 text-zinc-200 border-b border-zinc-800">
       <div className="mb-2 flex items-start gap-3">
-        <Image
+        <UserAvatar
           src={post.author.avatar}
-          alt={post.author.name}
-          width={40}
-          height={40}
-          className="h-10 w-10 rounded-full"
+          name={post.author.name}
+          size={40}
         />
         <div className="min-w-0 flex-1">
           <div className="flex items-center justify-between">
@@ -242,34 +251,32 @@ export default function PostCard({ post }: Props) {
         <button
           onClick={onToggleRepost}
           className="group flex items-center gap-2"
-          aria-pressed={isClient ? stored.reposted : false}
-          title={isClient && stored.reposted ? "Undo repost" : "Repost"}
+          aria-pressed={reposted}
+          title={reposted ? "Undo repost" : "Repost"}
         >
           <motion.span
             variants={repeatVariants}
-            animate={isClient && stored.reposted ? "boosted" : "initial"}
+            animate={reposted ? "boosted" : "initial"}
             className="inline-flex"
           >
             <Repeat2
               className={`h-4 w-4 transition-colors ${
-                isClient && stored.reposted
-                  ? "text-emerald-400"
-                  : "text-zinc-500"
+                reposted ? "text-emerald-400" : "text-zinc-500"
               } group-hover:text-emerald-400`}
             />
           </motion.span>
 
           <AnimatePresence mode="popLayout">
             <motion.span
-              key={repostsToShow}
+              key={reposts}
               initial={{ y: 6, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: -6, opacity: 0 }}
               transition={{ duration: 0.18 }}
-              className={isClient && stored.reposted ? "text-emerald-400" : ""}
+              className={reposted ? "text-emerald-400" : ""}
               suppressHydrationWarning
             >
-              {repostsToShow}
+              {reposts}
             </motion.span>
           </AnimatePresence>
         </button>
@@ -278,35 +285,36 @@ export default function PostCard({ post }: Props) {
         <button
           onClick={onToggleLike}
           className="group flex items-center gap-2"
-          aria-pressed={isClient ? stored.liked : false}
+          aria-pressed={liked}
         >
           <motion.span
             variants={heartVariants}
-            animate={isClient && stored.liked ? "liked" : "initial"}
+            animate={liked ? "liked" : "initial"}
             className="inline-flex"
           >
             <Heart
               className={`h-4 w-4 transition-colors ${
-                isClient && stored.liked
-                  ? "fill-red-500 text-red-500"
-                  : "text-zinc-500"
+                liked ? "fill-red-500 text-red-500" : "text-zinc-500"
               } group-hover:text-red-400`}
             />
           </motion.span>
 
-          <AnimatePresence mode="popLayout">
-            <motion.span
-              key={likesToShow}
-              initial={{ y: 6, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              exit={{ y: -6, opacity: 0 }}
-              transition={{ duration: 0.18 }}
-              className={isClient && stored.liked ? "text-red-400" : ""}
-              suppressHydrationWarning
-            >
-              {likesToShow}
-            </motion.span>
-          </AnimatePresence>
+          {/* Show count only if owner */}
+          {isOwner && (
+            <AnimatePresence mode="popLayout">
+              <motion.span
+                key={likes}
+                initial={{ y: 6, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                exit={{ y: -6, opacity: 0 }}
+                transition={{ duration: 0.18 }}
+                className={liked ? "text-red-400" : ""}
+                suppressHydrationWarning
+              >
+                {likes}
+              </motion.span>
+            </AnimatePresence>
+          )}
         </button>
 
         <div className="flex items-center gap-2">
@@ -326,19 +334,21 @@ export default function PostCard({ post }: Props) {
           >
             <CommentBox onSubmit={onAddComment} autoFocus />
             <ul className="space-y-3">
-              {commentsArr.map((c) => (
+              {comments.map((c) => (
                 <li
                   key={c.id}
                   className="rounded-xl border border-zinc-800 bg-zinc-950 p-3 text-sm text-zinc-200"
                 >
                   <div className="mb-1 text-xs text-zinc-500">
-                    {formatTimeUTC(c.createdAt)} ·{" "}
-                    {new Date(c.createdAt).toISOString().slice(0, 10)}
+                    <span className="font-bold text-zinc-400 mr-2">
+                      {c.authorName}
+                    </span>
+                    {formatTimeUTC(c.createdAt)}
                   </div>
                   <div className="whitespace-pre-wrap">{c.text}</div>
                 </li>
               ))}
-              {commentsArr.length === 0 && (
+              {comments.length === 0 && (
                 <div className="text-sm text-zinc-500">
                   Be the first to reply.
                 </div>

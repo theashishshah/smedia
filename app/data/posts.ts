@@ -5,6 +5,15 @@ export type Post = {
     content: string;
     image?: string;
     stats: { replies: number; reposts: number; likes: number; views: number };
+    likedByMe?: boolean;
+    repostedByMe?: boolean;
+    comments?: {
+        id: string;
+        text: string;
+        authorName: string;
+        authorAvatar: string;
+        createdAt: string;
+    }[];
 };
 
 export const demoPosts: Post[] = [

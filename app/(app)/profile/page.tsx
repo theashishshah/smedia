@@ -7,6 +7,8 @@ import { redirect } from "next/navigation";
 import { databaseConnection } from "@/libs/db";
 import { Post } from "@/models/Post.model";
 import type { Post as FeedPost } from "@/app/data/posts";
+import { User } from "@/models/User.model";
+import ProfileHeader from "@/app/components/ProfileHeader";
 
 export default async function ProfilePage() {
   const session = await getServerSession(authOptions);
@@ -14,16 +16,21 @@ export default async function ProfilePage() {
 
   await databaseConnection();
 
-  const posts = await Post.find({ authorEmail: session.user?.email })
-    .sort({ createdAt: -1 })
-    .lean();
+  const [posts, dbUser] = await Promise.all([
+    Post.find({ authorEmail: session.user?.email })
+      .sort({ createdAt: -1 })
+      .lean(),
+    User.findOne({ email: session.user?.email }).lean(),
+  ]);
 
   const user = {
-    name: session.user?.name || "User",
-    username: session.user?.email
-      ? `@${session.user.email.split("@")[0]}`
-      : "@user",
-    bio: "Building smedia | Web3 + React enthusiast 🚀",
+    name: dbUser?.name || session.user?.name || "User",
+    username:
+      dbUser?.username ||
+      (session.user?.email ? `@${session.user.email.split("@")[0]}` : "@user"),
+    bio: dbUser?.bio || "",
+    image: dbUser?.image || session.user?.image || undefined,
+    email: session.user?.email || "",
   };
 
   const cards: FeedPost[] = posts.map((p: any) => ({
@@ -31,7 +38,7 @@ export default async function ProfilePage() {
     author: {
       name: user.name,
       handle: user.username,
-      avatar: (session.user?.image as string) || "/avatar-placeholder.png",
+      avatar: user.image || "/avatar-placeholder.png",
       email: session.user?.email || "",
     },
     createdAt: new Date(p.createdAt ?? Date.now()).toISOString(),
@@ -39,10 +46,20 @@ export default async function ProfilePage() {
     image: p.imageUrl || undefined,
     stats: {
       replies: 0,
-      reposts: 0,
-      likes: 0,
-      views: 0,
+      reposts: p.reposts?.length || 0,
+      likes: p.likes?.length || 0,
+      views: p.views || 0,
     },
+    likedByMe: p.likes?.includes(session.user?.email),
+    repostedByMe: p.reposts?.includes(session.user?.email),
+    comments:
+      p.comments?.map((c: any) => ({
+        id: c.id,
+        text: c.text,
+        authorName: c.authorName,
+        authorAvatar: c.authorAvatar,
+        createdAt: new Date(c.createdAt).toISOString(),
+      })) || [],
   }));
 
   return (
@@ -51,12 +68,8 @@ export default async function ProfilePage() {
 
       <section className="space-y-6">
         <Topbar />
-        <div className="rounded-2xl border border-zinc-800 p-6 text-zinc-300">
-          <h2 className="text-xl font-bold text-white">{user.name}</h2>
-          <p className="text-zinc-500 mb-2">{user.username}</p>
-          <p>{user.bio}</p>
-        </div>
 
+        <ProfileHeader user={user} isOwnProfile={true} />
         <div className="divide-y divide-zinc-800 overflow-hidden rounded-2xl border border-zinc-800">
           {cards.length > 0 ? (
             cards.map((p) => <PostCard key={p.id} post={p} />)

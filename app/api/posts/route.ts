@@ -1,24 +1,66 @@
-// app/api/posts/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import authOptions from "@/libs/auth-options";
 import { databaseConnection } from "@/libs/db";
 import { Post } from "@/models/Post.model";
+import { User } from "@/models/User.model";
+import imagekit from "@/libs/imagekit";
 
 export async function GET(req: NextRequest) {
     try {
+        const session = await getServerSession(authOptions);
+        if (!session || !session.user?.email) {
+            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        }
+
         await databaseConnection();
         const { searchParams } = new URL(req.url);
-        const page = Math.max(1, Number(searchParams.get("page") || 1));
         const limit = Math.min(50, Number(searchParams.get("limit") || 20));
-        const skip = (page - 1) * limit;
 
-        const [posts, total] = await Promise.all([
-            Post.find().sort({ createdAt: -1 }).skip(skip).limit(limit).lean(),
-            Post.countDocuments(),
-        ]);
+        const posts = await Post.find().sort({ createdAt: -1 }).limit(limit).lean();
 
-        return NextResponse.json({ success: true, page, limit, total, posts }, { status: 200 });
+        // Get unique author emails
+        const authorEmails = Array.from(new Set(posts.map((p: any) => p.authorEmail).filter(Boolean)));
+        
+        // Fetch user details
+        const users = await User.find({ email: { $in: authorEmails } }).lean();
+        const userMap = new Map(users.map((u: any) => [u.email, u]));
+
+        const feedPosts = posts.map((p: any) => {
+            const author = userMap.get(p.authorEmail);
+            const fallbackName = p.authorName || "Unknown User";
+            const fallbackHandle = p.authorEmail ? `@${p.authorEmail.split("@")[0]}` : "@unknown";
+            
+            return {
+                id: String(p._id),
+                author: {
+                    name: author?.name || fallbackName,
+                    handle: author?.username || (author?.email ? `@${author.email.split("@")[0]}` : fallbackHandle),
+                    avatar: author?.image || p.authorAvatar || "/avatar-placeholder.png",
+                    email: p.authorEmail,
+                },
+                createdAt: new Date(p.createdAt ?? Date.now()).toISOString(),
+                content: p.text ?? "",
+                image: p.imageUrl || undefined,
+                stats: {
+                    replies: 0,
+                    reposts: p.reposts?.length || 0,
+                    likes: p.likes?.length || 0,
+                    views: p.views || 0,
+                },
+                likedByMe: p.likes?.includes(session.user?.email),
+                repostedByMe: p.reposts?.includes(session.user?.email),
+                comments: p.comments?.map((c: any) => ({
+                    id: c.id,
+                    text: c.text,
+                    authorName: c.authorName,
+                    authorAvatar: c.authorAvatar,
+                    createdAt: new Date(c.createdAt).toISOString(),
+                })) || [],
+            };
+        });
+
+        return NextResponse.json({ success: true, posts: feedPosts });
     } catch (e) {
         console.error("GET /api/posts error", e);
         return NextResponse.json({ success: false, message: "Server error" }, { status: 500 });
@@ -32,31 +74,32 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ success: false, message: "Unauthorized" }, { status: 401 });
         }
 
-        const body = await req.json();
-        const { text = "", imageUrl = "", imageFileId = "" } = body ?? {};
+        const formData = await req.formData();
+        const text = formData.get("text") as string;
+        const files = formData.getAll("files") as File[];
+        
+        let imageUrl = "";
 
-        if (!text && !imageUrl) {
-            return NextResponse.json(
-                { success: false, message: "Provide text or image." },
-                { status: 400 }
-            );
+        if (files && files.length > 0) {
+            const file = files[0];
+            const buffer = Buffer.from(await file.arrayBuffer());
+            
+            const uploadResponse = await imagekit.upload({
+                file: buffer,
+                fileName: file.name,
+                folder: "/posts"
+            });
+            
+            imageUrl = uploadResponse.url;
         }
-
-        if (typeof text !== "string" || text.length > 2000) {
-            return NextResponse.json(
-                { success: false, message: "Text too long (max 2000 chars)." },
-                { status: 400 }
-            );
-        }
-
+        
         await databaseConnection();
 
         const created = await Post.create({
-            authorId: (session.user as any).id, // you set this in session callback
+            authorId: (session.user as any).id,
             authorEmail: session.user.email ?? undefined,
-            text: text.trim(),
+            text: text?.trim() || "",
             imageUrl: imageUrl || undefined,
-            imageFileId: imageFileId || undefined,
         });
 
         return NextResponse.json({ success: true, post: created }, { status: 201 });
@@ -65,21 +108,3 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ success: false, message: "Server error" }, { status: 500 });
     }
 }
-
-// import { NextResponse } from 'next/server';
-
-// export async function POST(req: Request) {
-//   const form = await req.formData();
-//   const text = String(form.get('text') ?? '');
-
-//   // Files: iterate and upload to storage (S3, GCS, Cloudflare R2, etc.)
-//   const files = form.getAll('files') as File[];
-
-//   // Example validation
-//   if (text.trim().length === 0 && files.length === 0 && ![...form.keys()].some((k) => k.startsWith('gif_'))) {
-//     return NextResponse.json({ error: 'Empty post' }, { status: 400 });
-//   }
-
-//   // TODO: upload media, persist post in DB, return new post ID
-//   return NextResponse.json({ ok: true, id: crypto.randomUUID() });
-// }

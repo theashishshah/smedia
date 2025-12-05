@@ -14,8 +14,9 @@ import CreatePost from "@/app/components/CreatePost";
 import type { Post as FeedPost } from "@/app/data/posts";
 
 import TimerStarter from "@/app/components/TimerStarter";
-
 import { User } from "@/models/User.model";
+import PostComposer from "@/app/components/PostComposer";
+import Feed from "@/app/components/Feed";
 
 export default async function HomePage() {
   const session = await getServerSession(authOptions);
@@ -53,10 +54,20 @@ export default async function HomePage() {
       image: p.imageUrl || undefined,
       stats: {
         replies: 0,
-        reposts: 0,
-        likes: 0,
-        views: 0,
+        reposts: p.reposts?.length || 0,
+        likes: p.likes?.length || 0,
+        views: p.views || 0,
       },
+      likedByMe: p.likes?.includes(session.user?.email),
+      repostedByMe: p.reposts?.includes(session.user?.email),
+      comments:
+        p.comments?.map((c: any) => ({
+          id: c.id,
+          text: c.text,
+          authorName: c.authorName,
+          authorAvatar: c.authorAvatar,
+          createdAt: new Date(c.createdAt).toISOString(),
+        })) || [],
     };
   });
 
@@ -69,23 +80,10 @@ export default async function HomePage() {
         <Topbar />
 
         {/* Composer */}
-        <CreatePost
-          onCreated={
-            undefined /* client-only; if you want instant prepend, move feed client-side */
-          }
-        />
+        <PostComposer />
 
-        {/* Real posts on top */}
-        <div className="divide-y divide-zinc-800 overflow-hidden rounded-2xl border border-zinc-800">
-          {cards.map((p) => (
-            <PostCard key={p.id} post={p} />
-          ))}
-
-          {/* Demo posts below */}
-          {demoPosts.map((p) => (
-            <PostCard key={`demo-${p.id}`} post={p} />
-          ))}
-        </div>
+        {/* Feed with Real-time updates */}
+        <Feed initialPosts={cards} />
       </section>
 
       <aside className="hidden md:block">

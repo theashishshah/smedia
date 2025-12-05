@@ -19,6 +19,20 @@ const postSchema = new Schema<IPost>(
         text: { type: String, maxlength: 2000, default: "" },
         imageUrl: { type: String },
         imageFileId: { type: String },
+        likes: { type: [String], default: [] }, // Array of user emails or IDs
+        reposts: { type: [String], default: [] }, // Array of user emails or IDs
+        views: { type: Number, default: 0 },
+        comments: {
+            type: [{
+                id: String,
+                text: String,
+                authorEmail: String,
+                authorName: String,
+                authorAvatar: String,
+                createdAt: Date,
+            }],
+            default: []
+        },
     },
     { timestamps: true }
 );

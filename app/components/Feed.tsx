@@ -1,42 +1,45 @@
 "use client";
 
-type Post = {
-    id: string;
-    author: { name: string; handle: string };
-    text: string;
-    createdAt: string;
+import { useEffect, useState } from "react";
+import PostCard from "./PostCard";
+import type { Post as FeedPost } from "@/app/data/posts";
+
+type Props = {
+  initialPosts: FeedPost[];
 };
 
-export default function Feed() {
-    // Placeholder content. Replace with server-fetched data.
-    const posts: Post[] = [
-        {
-            id: "1",
-            author: { name: "S Media", handle: "smedia" },
-            text: "Welcome to smedia.corp 🚀",
-            createdAt: new Date().toISOString(),
-        },
-    ];
+export default function Feed({ initialPosts }: Props) {
+  const [posts, setPosts] = useState<FeedPost[]>(initialPosts);
 
-    return (
-        <div className="divide-y divide-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden">
-            {posts.map((p) => (
-                <article key={p.id} className="bg-black p-4">
-                    <div className="mb-1 flex items-center gap-2 text-sm text-zinc-400">
-                        <div className="h-8 w-8 rounded-full bg-zinc-800" />
-                        <span className="text-white font-semibold">{p.author.name}</span>
-                        <span>@{p.author.handle}</span>
-                        <span>
-                            ·{" "}
-                            {new Date(p.createdAt).toLocaleTimeString([], {
-                                hour: "2-digit",
-                                minute: "2-digit",
-                            })}
-                        </span>
-                    </div>
-                    <p className="whitespace-pre-wrap text-zinc-100">{p.text}</p>
-                </article>
-            ))}
-        </div>
-    );
+  useEffect(() => {
+    const fetchPosts = async () => {
+      try {
+        const res = await fetch("/api/posts?limit=20");
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success) {
+            setPosts(data.posts);
+          }
+        }
+      } catch (error) {
+        console.error("Failed to fetch posts", error);
+      }
+    };
+
+    const interval = setInterval(fetchPosts, 5000); // Poll every 5 seconds
+
+    return () => clearInterval(interval);
+  }, []);
+
+  if (posts.length === 0) {
+    return <div className="p-8 text-center text-zinc-500">No posts yet.</div>;
+  }
+
+  return (
+    <div className="divide-y divide-zinc-800 overflow-hidden rounded-2xl border border-zinc-800">
+      {posts.map((p) => (
+        <PostCard key={p.id} post={p} />
+      ))}
+    </div>
+  );
 }

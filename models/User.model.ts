@@ -5,6 +5,8 @@ export interface IUser {
     _id?: mongoose.Types.ObjectId;
     email: string;
     name?: string;
+    username?: string;
+    bio?: string;
     image?: string;
 
     provider: "credentials" | "google";
@@ -20,6 +22,8 @@ const userSchema = new Schema(
     {
         email: { type: String, required: true, unique: true, index: true },
         name: { type: String },
+        username: { type: String, unique: true, sparse: true },
+        bio: { type: String, maxlength: 160 },
         image: { type: String },
 
         // mark how the account was created
