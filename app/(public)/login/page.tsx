@@ -7,54 +7,54 @@ import { signIn } from "next-auth/react";
 import { useState } from "react";
 
 export default function Page() {
-    const router = useRouter();
-    const [error, setError] = useState<string | null>(null);
-    const [loading, setLoading] = useState(false);
+  const router = useRouter();
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
-    const signInWithCredentials = async (email: string, password: string) => {
-        try {
-            setLoading(true);
-            setError(null);
+  const signInWithCredentials = async (email: string, password: string) => {
+    try {
+      setLoading(true);
+      setError(null);
 
-            const res = await signIn("credentials", {
-                redirect: false,
-                email,
-                password,
-            });
+      const res = await signIn("credentials", {
+        redirect: false,
+        email,
+        password,
+      });
 
-            if (res?.error) {
-                setError(res.error);
-                return;
-            }
+      if (res?.error) {
+        setError(res.error);
+        return;
+      }
 
-            router.push("/home");
-        } finally {
-            setLoading(false);
-        }
-    };
+      router.push("/home?startTimer=1");
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    const signInWithGoogle = () => {
-        console.log("Sign in with Google");
-        signIn("google", { callbackUrl: "/home" });
-    };
+  const signInWithGoogle = () => {
+    console.log("Sign in with Google");
+    signIn("google", { callbackUrl: "/home?startTimer=1" });
+  };
 
-    return (
-        <AuthLayout title="Happening now." subtitle="Sign in to smedia.corp">
-            <AuthForm
-                mode="login"
-                onEmailPasswordSubmit={signInWithCredentials}
-                onGoogle={signInWithGoogle}
-                loading={loading}
-                error={error ?? undefined}
-            />
-            <div className="mt-6 text-zinc-400">
-                Don&apos;t have an account?{" "}
-                <a className="text-white font-semibold hover:underline" href="/signup">
-                    Create one
-                </a>
-            </div>
-        </AuthLayout>
-    );
+  return (
+    <AuthLayout title="Happening now." subtitle="Sign in to smedia.corp">
+      <AuthForm
+        mode="login"
+        onEmailPasswordSubmit={signInWithCredentials}
+        onGoogle={signInWithGoogle}
+        loading={loading}
+        error={error ?? undefined}
+      />
+      <div className="mt-6 text-zinc-400">
+        Don&apos;t have an account?{" "}
+        <a className="text-white font-semibold hover:underline" href="/signup">
+          Create one
+        </a>
+      </div>
+    </AuthLayout>
+  );
 }
 
 // "use client";

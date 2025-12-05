@@ -5,11 +5,11 @@ import { User } from "@/models/User.model";
 export async function POST(req: NextRequest) {
     try {
         const body = await req.json();
-        const { email, password } = body;
+        const { email, password, name } = body;
 
-        if (!email || !password) {
+        if (!email || !password || !name) {
             return NextResponse.json(
-                { success: false, message: "Email and password are required." },
+                { success: false, message: "Name, email and password are required." },
                 { status: 400 }
             );
         }
@@ -46,6 +46,7 @@ export async function POST(req: NextRequest) {
         }
 
         const user = await User.create({
+            name,
             email,
             password,
             provider: "credentials",
@@ -92,6 +93,11 @@ export async function GET(req: NextRequest) {
                 { status: 200 }
             );
         }
+        
+        return NextResponse.json(
+            { success: false, message: "Email parameter is required." },
+            { status: 400 }
+        );
     } catch (error) {
         console.log("GET Users Error:", error);
         return NextResponse.json(
