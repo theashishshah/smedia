@@ -1,26 +1,45 @@
 {
-  "name": "college-major",
-  "version": "0.1.0",
-  "private": true,
-  "scripts": {
-    "dev": "next dev --turbopack",
-    "build": "next build --turbopack",
-    "start": "next start",
-    "lint": "biome check",
-    "format": "biome format --write"
-  },
-  "dependencies": {
-    "react": "19.1.0",
-    "react-dom": "19.1.0",
-    "next": "15.5.0"
-  },
-  "devDependencies": {
-    "typescript": "^5",
-    "@types/node": "^20",
-    "@types/react": "^19",
-    "@types/react-dom": "^19",
-    "@tailwindcss/postcss": "^4",
-    "tailwindcss": "^4",
-    "@biomejs/biome": "2.2.0"
-  }
+    "name": "college-major",
+    "version": "0.1.0",
+    "private": true,
+    "scripts": {
+        "dev": "next dev --turbopack",
+        "build": "next build --turbopack",
+        "start": "next start",
+        "lint": "biome check",
+        "format": "biome format --write"
+    },
+    "dependencies": {
+        "@imagekit/next": "^2.1.2",
+        "@radix-ui/react-label": "^2.1.7",
+        "@radix-ui/react-progress": "^1.1.7",
+        "@radix-ui/react-separator": "^1.1.7",
+        "@radix-ui/react-slot": "^1.2.3",
+        "bcryptjs": "^3.0.2",
+        "class-variance-authority": "^0.7.1",
+        "clsx": "^2.1.1",
+        "framer-motion": "^12.23.12",
+        "imagekit": "^6.0.0",
+        "lucide-react": "^0.540.0",
+        "mongoose": "^8.17.2",
+        "next": "15.5.0",
+        "next-auth": "^4.24.11",
+        "openai": "^6.8.1",
+        "react": "19.1.0",
+        "react-dom": "19.1.0",
+        "react-google-button": "^0.8.0",
+        "tailwind-merge": "^3.3.1"
+    },
+    "devDependencies": {
+        "@biomejs/biome": "2.2.0",
+        "@tailwindcss/postcss": "^4",
+        "@types/bcryptjs": "^2.4.6",
+        "@types/node": "^20",
+        "@types/react": "^19",
+        "@types/react-dom": "^19",
+        "daisyui": "^5.0.50",
+        "tailwindcss": "^4",
+        "tw-animate-css": "^1.3.7",
+        "typescript": "^5"
+    }
 }
