@@ -92,7 +92,7 @@ export default function AuthForm({
       {/* Top loading bar */}
       {isLoading && (
         <div className="absolute inset-x-0 -top-2 h-0.5 overflow-hidden rounded-full">
-          <div className="h-full w-1/3 animate-[progress_1.2s_linear_infinite] bg-zinc-300" />
+          <div className="h-full w-1/3 animate-[progress_1.2s_linear_infinite] bg-primary" />
         </div>
       )}
 
@@ -112,7 +112,7 @@ export default function AuthForm({
 
       <button
         onClick={handleGoogle}
-        className="flex w-full items-center justify-center gap-3 rounded-full border border-zinc-700 bg-black px-5 py-3 font-semibold text-white hover:bg-zinc-900 transition hover:cursor-pointer disabled:opacity-70"
+        className="flex w-full items-center justify-center gap-3 rounded-full border border-input bg-background px-5 py-3 font-semibold text-foreground hover:bg-accent hover:text-accent-foreground transition hover:cursor-pointer disabled:opacity-70"
         disabled={isLoading}
         aria-label="Continue with Google"
       >
@@ -130,21 +130,21 @@ export default function AuthForm({
       </button>
 
       <div className="flex items-center gap-4">
-        <div className="h-px flex-1 bg-zinc-800" />
-        <span className="text-xs text-zinc-400">OR</span>
-        <div className="h-px flex-1 bg-zinc-800" />
+        <div className="h-px flex-1 bg-border" />
+        <span className="text-xs text-muted-foreground">OR</span>
+        <div className="h-px flex-1 bg-border" />
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-3">
         {mode === "signup" && (
           <div>
-            <label className="mb-1 block text-sm text-zinc-300">Name</label>
+            <label className="mb-1 block text-sm text-foreground">Name</label>
             <input
               type="text"
               required
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full rounded-lg border border-zinc-700 bg-zinc-950 px-4 py-3 text-white placeholder-zinc-500 focus:border-zinc-500 focus:outline-none"
+              className="w-full rounded-lg border border-input bg-background px-4 py-3 text-foreground placeholder-muted-foreground focus:border-ring focus:outline-none focus:ring-1 focus:ring-ring"
               placeholder="John Doe"
               autoComplete="name"
               disabled={isLoading}
@@ -152,13 +152,13 @@ export default function AuthForm({
           </div>
         )}
         <div>
-          <label className="mb-1 block text-sm text-zinc-300">Email</label>
+          <label className="mb-1 block text-sm text-foreground">Email</label>
           <input
             type="email"
             required
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="w-full rounded-lg border border-zinc-700 bg-zinc-950 px-4 py-3 text-white placeholder-zinc-500 focus:border-zinc-500 focus:outline-none"
+            className="w-full rounded-lg border border-input bg-background px-4 py-3 text-foreground placeholder-muted-foreground focus:border-ring focus:outline-none focus:ring-1 focus:ring-ring"
             placeholder="name@example.com"
             autoComplete="email"
             disabled={isLoading}
@@ -166,13 +166,13 @@ export default function AuthForm({
         </div>
 
         <div>
-          <label className="mb-1 block text-sm text-zinc-300">Password</label>
+          <label className="mb-1 block text-sm text-foreground">Password</label>
           <input
             type="password"
             required
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="w-full rounded-lg border border-zinc-700 bg-zinc-950 px-4 py-3 text-white placeholder-zinc-500 focus:border-zinc-500 focus:outline-none"
+            className="w-full rounded-lg border border-input bg-background px-4 py-3 text-foreground placeholder-muted-foreground focus:border-ring focus:outline-none focus:ring-1 focus:ring-ring"
             placeholder="••••••••"
             autoComplete={
               mode === "signup" ? "new-password" : "current-password"
@@ -185,7 +185,7 @@ export default function AuthForm({
         <button
           type="submit"
           disabled={isLoading}
-          className="w-full rounded-full bg-white px-5 py-3 font-bold text-black hover:bg-zinc-200 transition disabled:opacity-70 hover:cursor-pointer"
+          className="w-full rounded-full bg-foreground px-5 py-3 font-bold text-background hover:bg-foreground/90 transition disabled:opacity-70 hover:cursor-pointer"
         >
           {isLoading ? (
             <span className="flex items-center justify-center gap-2">
@@ -200,7 +200,10 @@ export default function AuthForm({
 
       {mode === "login" && (
         <div className="text-right">
-          <a className="text-sm text-zinc-400 hover:underline" href="/forgot">
+          <a
+            className="text-sm text-muted-foreground hover:underline"
+            href="/forgot"
+          >
             Forgot password?
           </a>
         </div>
@@ -209,7 +212,7 @@ export default function AuthForm({
       {/* Error alert */}
       {error && (
         <div
-          className="rounded-md border border-red-500/40 bg-red-500/10 p-3 text-sm text-red-300"
+          className="rounded-md border border-destructive/50 bg-destructive/10 p-3 text-sm text-destructive"
           role="alert"
           aria-live="assertive"
         >

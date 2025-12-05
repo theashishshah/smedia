@@ -132,7 +132,7 @@ export default function PostComposer({ onSubmitPost }: Props) {
 
   return (
     <div
-      className="rounded-2xl border border-zinc-800 bg-black p-4"
+      className="rounded-2xl border border-border bg-card p-4"
       onDrop={onDrop}
       onDragOver={(e) => e.preventDefault()}
     >
@@ -150,7 +150,7 @@ export default function PostComposer({ onSubmitPost }: Props) {
             onChange={(e) => setText(e.target.value.slice(0, 2000))}
             onPaste={onPaste}
             placeholder="What is happening?!"
-            className="min-h-24 w-full resize-none bg-transparent text-lg text-white placeholder-zinc-500 outline-none"
+            className="min-h-24 w-full resize-none bg-transparent text-lg text-foreground placeholder-muted-foreground outline-none"
             rows={3}
           />
           <MediaPreview media={media} onRemove={removeMedia} />
@@ -158,7 +158,7 @@ export default function PostComposer({ onSubmitPost }: Props) {
           <div className="mt-3 flex items-center justify-between">
             <div className="flex items-center gap-1">
               {/* Upload image/video */}
-              <label className="rounded-full p-2 hover:bg-zinc-800 cursor-pointer">
+              <label className="rounded-full p-2 hover:bg-accent hover:text-accent-foreground cursor-pointer transition-colors">
                 <input
                   type="file"
                   accept="image/*,video/*"
@@ -190,14 +190,14 @@ export default function PostComposer({ onSubmitPost }: Props) {
                 type="button"
                 disabled={!canPost}
                 onClick={handleSubmit}
-                className="rounded-full bg-white px-5 py-2.5 font-semibold text-black hover:bg-zinc-200 disabled:opacity-60"
+                className="rounded-full bg-foreground px-5 py-2.5 font-semibold text-background hover:bg-foreground/90 disabled:opacity-60 transition-colors"
               >
                 Post
               </button>
             </div>
           </div>
 
-          <p className="mt-2 text-xs text-zinc-500">
+          <p className="mt-2 text-xs text-muted-foreground">
             Drag & drop images or videos, paste from clipboard, add emojis and
             GIFs. Up to 4 media items.
           </p>

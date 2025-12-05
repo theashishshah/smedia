@@ -125,27 +125,29 @@ export default function EditProfileModal({ user, isOpen, onClose }: Props) {
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
-            className="fixed left-1/2 top-1/2 z-50 w-full max-w-md -translate-x-1/2 -translate-y-1/2 rounded-2xl border border-zinc-800 bg-black p-6 shadow-xl"
+            className="fixed left-1/2 top-1/2 z-50 w-full max-w-md -translate-x-1/2 -translate-y-1/2 rounded-2xl border border-border bg-background p-6 shadow-xl"
           >
             <div className="mb-6 flex items-center justify-between">
-              <h2 className="text-xl font-bold text-white">Edit Profile</h2>
+              <h2 className="text-xl font-bold text-foreground">
+                Edit Profile
+              </h2>
               <button
                 onClick={onClose}
-                className="text-zinc-500 hover:text-white"
+                className="text-muted-foreground hover:text-foreground"
               >
                 <X size={24} />
               </button>
             </div>
 
             {error && (
-              <div className="mb-4 rounded-md bg-red-500/10 p-3 text-sm text-red-500">
+              <div className="mb-4 rounded-md bg-destructive/10 p-3 text-sm text-destructive">
                 {error}
               </div>
             )}
 
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="mb-1 block text-sm font-medium text-zinc-400">
+                <label className="mb-1 block text-sm font-medium text-muted-foreground">
                   Profile Picture
                 </label>
                 <div className="flex items-center gap-4">
@@ -160,48 +162,52 @@ export default function EditProfileModal({ user, isOpen, onClose }: Props) {
                     type="file"
                     accept="image/*"
                     onChange={handleFileChange}
-                    className="text-sm text-zinc-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-zinc-800 file:text-white hover:file:bg-zinc-700"
+                    className="text-sm text-muted-foreground file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-secondary file:text-secondary-foreground hover:file:bg-secondary/80"
                   />
                   {uploading && (
-                    <span className="text-xs text-zinc-500">Uploading...</span>
+                    <span className="text-xs text-muted-foreground">
+                      Uploading...
+                    </span>
                   )}
                 </div>
               </div>
 
               <div>
-                <label className="mb-1 block text-sm font-medium text-zinc-400">
+                <label className="mb-1 block text-sm font-medium text-muted-foreground">
                   Name
                 </label>
                 <input
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="w-full rounded-md border border-zinc-800 bg-zinc-900 px-3 py-2 text-white focus:border-zinc-600 focus:outline-none"
+                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-foreground focus:border-ring focus:outline-none focus:ring-1 focus:ring-ring"
                   required
                 />
               </div>
 
               <div>
-                <label className="mb-1 block text-sm font-medium text-zinc-400">
+                <label className="mb-1 block text-sm font-medium text-muted-foreground">
                   Username
                 </label>
                 <div className="relative">
-                  <span className="absolute left-3 top-2 text-zinc-500">@</span>
+                  <span className="absolute left-3 top-2 text-muted-foreground">
+                    @
+                  </span>
                   <input
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
-                    className="w-full rounded-md border border-zinc-800 bg-zinc-900 pl-7 pr-3 py-2 text-white focus:border-zinc-600 focus:outline-none"
+                    className="w-full rounded-md border border-input bg-background pl-7 pr-3 py-2 text-foreground focus:border-ring focus:outline-none focus:ring-1 focus:ring-ring"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="mb-1 block text-sm font-medium text-zinc-400">
+                <label className="mb-1 block text-sm font-medium text-muted-foreground">
                   Bio
                 </label>
                 <textarea
                   value={bio}
                   onChange={(e) => setBio(e.target.value)}
-                  className="w-full resize-none rounded-md border border-zinc-800 bg-zinc-900 px-3 py-2 text-white focus:border-zinc-600 focus:outline-none"
+                  className="w-full resize-none rounded-md border border-input bg-background px-3 py-2 text-foreground focus:border-ring focus:outline-none focus:ring-1 focus:ring-ring"
                   rows={3}
                   maxLength={160}
                 />
@@ -210,7 +216,7 @@ export default function EditProfileModal({ user, isOpen, onClose }: Props) {
               <button
                 type="submit"
                 disabled={loading || uploading}
-                className="w-full rounded-full bg-white py-2 font-bold text-black hover:bg-zinc-200 disabled:opacity-50"
+                className="w-full rounded-full bg-foreground py-2 font-bold text-background hover:bg-foreground/90 disabled:opacity-50 transition-colors"
               >
                 {loading ? "Saving..." : "Save"}
               </button>

@@ -145,7 +145,7 @@ export default function PostCard({ post }: Props) {
   const replyCount = (post.stats.replies || 0) + comments.length;
 
   return (
-    <article className="bg-black p-4 text-zinc-200 border-b border-zinc-800">
+    <article className="bg-background p-4 text-foreground border-b border-border">
       <div className="mb-2 flex items-start gap-3">
         <UserAvatar
           src={post.author.avatar}
@@ -194,7 +194,7 @@ export default function PostCard({ post }: Props) {
                 <button
                   onClick={handleSaveEdit}
                   disabled={isSaving}
-                  className="flex items-center gap-1 rounded bg-white px-3 py-1 text-xs font-bold text-black hover:bg-zinc-200"
+                  className="flex items-center gap-1 rounded bg-foreground px-3 py-1 text-xs font-bold text-background hover:bg-foreground/90 transition-colors"
                 >
                   {isSaving ? "Saving..." : "Save"}
                 </button>
@@ -203,7 +203,7 @@ export default function PostCard({ post }: Props) {
                     setIsEditing(false);
                     setEditedText(post.content);
                   }}
-                  className="rounded border border-zinc-700 px-3 py-1 text-xs font-bold text-white hover:bg-zinc-800"
+                  className="rounded border border-input px-3 py-1 text-xs font-bold text-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
                 >
                   Cancel
                 </button>
