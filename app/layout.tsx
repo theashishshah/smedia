@@ -16,6 +16,9 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Smedia Corp",
   description: "This is our next gen social media platform.",
+  icons: {
+    icon: "/icon.svg",
+  },
 };
 
 export default function RootLayout({

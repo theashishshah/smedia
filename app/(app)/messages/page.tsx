@@ -31,7 +31,9 @@ type Conversation = {
   updatedAt: string;
 };
 
-export default function MessagesPage() {
+import { Suspense } from "react";
+
+function MessagesContent() {
   const { data: session } = useSession();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -280,6 +282,20 @@ export default function MessagesPage() {
         </div>
       </section>
     </main>
+  );
+}
+
+export default function MessagesPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex h-screen items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin" />
+        </div>
+      }
+    >
+      <MessagesContent />
+    </Suspense>
   );
 }
 
