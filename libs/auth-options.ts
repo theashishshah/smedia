@@ -102,7 +102,22 @@ export const authOptions: NextAuthOptions = {
         async session({ session, token }) {
             if (session.user) {
                 // Prefer token.id; fallback to token.sub
-                (session.user as any).id = (token as any).id ?? token.sub ?? null;
+                const userId = (token as any).id ?? token.sub ?? null;
+                (session.user as any).id = userId;
+
+                // Sync with DB to get latest image/name
+                if (userId) {
+                    try {
+                        await databaseConnection();
+                        const freshUser = await User.findById(userId).select("name image");
+                        if (freshUser) {
+                            session.user.name = freshUser.name;
+                            session.user.image = freshUser.image;
+                        }
+                    } catch (e) {
+                        console.error("Error syncing session user:", e);
+                    }
+                }
             }
             return session;
         },

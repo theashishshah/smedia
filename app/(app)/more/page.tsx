@@ -187,6 +187,8 @@ export default function MorePage() {
         <div className="overflow-hidden rounded-2xl border border-zinc-800">
           <ListItem as={Link} href="/settings" label="Settings" emoji="⚙️" />
           <Divider />
+          <ListItem as={Link} href="/reports" label="Reports" emoji="🚩" />
+          <Divider />
           <ListItem
             as={Link}
             href="/developer"

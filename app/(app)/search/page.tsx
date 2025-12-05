@@ -42,7 +42,7 @@ export default async function ExplorePage() {
       content: p.text ?? "",
       image: p.imageUrl || undefined,
       stats: {
-        replies: p.comments.length || 0,
+        replies: p.comments?.length || 0,
         reposts: p.reposts?.length || 0,
         likes: p.likes?.length || 0,
         views: p.views || 0,
@@ -66,14 +66,11 @@ export default async function ExplorePage() {
 
       <section className="space-y-6">
         <Topbar />
-        <div className="rounded-2xl border border-zinc-800 p-4 text-zinc-300">
-          <h2 className="text-lg font-bold text-white mb-4">Trending Topics</h2>
-          <ul className="space-y-2 text-sm text-zinc-400">
-            <li>#Web3</li>
-            <li>#NextJSConf</li>
-            <li>#OpenSource</li>
-            <li>#AIRevolution</li>
-          </ul>
+        <div className="rounded-2xl border border-zinc-800 p-6 text-zinc-300 bg-zinc-900/50">
+          <h2 className="text-xl font-bold text-white mb-2">Most Watched</h2>
+          <p className="text-sm text-zinc-400">
+            Top posts sorted by view count.
+          </p>
         </div>
 
         <div className="divide-y divide-zinc-800 overflow-hidden rounded-2xl border border-zinc-800">
